@@ -33,10 +33,10 @@ int songLength = 14;
 // OTHER IMPORTANT VARIABLES //
 boolean solenoidFound = false;
 boolean readyForSong = true;
-int initTime = 0;
+unsigned long initTime = 0;
 int initDelay = 500;
-int nextNoteTime = 0;
-int solenoidDropTime = 0;
+unsigned long nextNoteTime = 0;
+unsigned long                                                                                                                                                                                                                                                                       solenoidDropTime = 0;
 int holdTime = 8000;
 
 
