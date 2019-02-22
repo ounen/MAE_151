@@ -45,10 +45,12 @@ void setup() {
   digitalWrite(resetMIDI, HIGH);
   delay(100);
   talkMIDI(0xB0, 0x07, 120); //0xB0 is channel message, set channel volume to near max (127)
+  talkMIDI(0xB0, 0, 0x00); //Default bank GM1
+  talkMIDI(0xC0, instrument, 0); //Set instrument number. 0xC0 is a 1 data byte command
 
   // LED STRIP INITIALIZATION
   strip.begin();
-  strip.setBrightness(30);
+  strip.setBrightness(75);
   strip.show(); // Initialize all pixels to 'off'
 
   // SENSOR/ACTUATOR INITIALIZATION //
@@ -57,11 +59,10 @@ void setup() {
 
   // SERIAL COMMUNICATION //
   Serial.begin(9600);
+  
 }
 
 void loop() {
-  talkMIDI(0xB0, 0, 0x00); //Default bank GM1
-  talkMIDI(0xC0, instrument, 0); //Set instrument number. 0xC0 is a 1 data byte command
 
   if( digitalRead(breakBeam) == false ){
     digitalWrite(solenoid, HIGH);
@@ -110,6 +111,7 @@ void loop() {
     noteOff(0, song[0][noteNum - 1], 60); // Turn off previous note
     noteNum = 0;
     color = 0;
+    colorSweep();
   }
 
   // SOLENOID: CHECK IF IT'S TIME TO DROP THE BALL (IN CASE DROP TIME IS AFTER SONG HAS PLAYED)
@@ -120,7 +122,7 @@ void loop() {
     
     Serial.println("Release Time");
   }
-  
+
 }
 
 
@@ -150,7 +152,14 @@ void colorWipe(uint8_t color) {
         strip.setPixelColor(i, strip.Color(0,0,255));
         strip.show();
       }
-      break;                        
+      break;                       
+  }
+}
+
+void colorSweep(){
+  for(uint16_t i=0; i<strip.numPixels(); i++) {
+        strip.setPixelColor(i, strip.Color(0,0,0));
+        strip.show();
   }
 }
 
