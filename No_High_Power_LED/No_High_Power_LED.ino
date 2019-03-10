@@ -3,11 +3,9 @@
 
 SoftwareSerial mySerial(2, 3); // RX, TX
 #define breakBeam 5
-#define LED 13
 #define solenoid 6
-#define red 9
-#define green 10
-#define blue 11
+#define LED 11
+
 
 
 // MIDI AND SONG DEVELOPEMENT //
@@ -21,7 +19,6 @@ float song[2][4] =
   {2, 0.5, 0.5, 1}
 };
 int noteNum = 0; // Tracker for Arduino to know what note to play
-int color = 0;
 
 // OTHER IMPORTANT VARIABLES //
 boolean solenoidFound = false;
@@ -29,6 +26,7 @@ boolean readyForSong = true;
 unsigned long initTime = 0;
 int initDelay = 500;
 unsigned long nextNoteTime = 0;
+unsigned long prevTime = 0;
 unsigned long solenoidDropTime = 0;
 int holdTime = 2000;
 
@@ -47,9 +45,7 @@ void setup() {
   talkMIDI(0xC0, instrument, 0); //Set instrument number. 0xC0 is a 1 data byte command
 
   // LED LIGHT INITIALIZATION //
-  analogWrite(red, 0);
-  analogWrite(green, 0);
-  analogWrite(blue, 0);
+  analogWrite(LED, 0);
 
   // SENSOR/ACTUATOR INITIALIZATION //
   pinMode(breakBeam, INPUT_PULLUP);
@@ -82,18 +78,17 @@ void loop() {
       // MIDI: WAIT FOR NEXT NOTE TO PLAY
       if( millis() > nextNoteTime){
         Serial.println(song[0][noteNum], DEC);
-        
+        analogWrite(LED, 0);
+        prevTime = millis();
         noteOff(0, song[0][noteNum - 1], 60); // Turn off previous note
         // If not a null note, play the note
         if( song[0][noteNum] != -1 ){
           noteOn(0, song[0][noteNum], 60);
 
-          playLED(color);
         }
         
         nextNoteTime += beatPeriod*song[1][noteNum]; // Define when to play next note
         noteNum++; // Move to next note in array
-        color++;
       }
 
       // SOLENOID: CHECK IF IT'S TIME TO DROP THE BALL
@@ -104,11 +99,13 @@ void loop() {
         
         Serial.println("Release Time");
       }
-    }
+      
+      analogWrite(LED, map(millis(), prevTime, nextNoteTime, 0, 255)); 
+    } // Song is finished
 
     noteOff(0, song[0][noteNum - 1], 60); // Turn off previous note
     noteNum = 0;
-    playLED(-1);
+    analogWrite(LED, 0);
   }
 
   // SOLENOID: CHECK IF IT'S TIME TO DROP THE BALL (IN CASE DROP TIME IS AFTER SONG HAS PLAYED)
@@ -127,29 +124,7 @@ void loop() {
 //////////////////////////
 // ADDITIONAL FUNCTIONS //
 //////////////////////////
-// LED Basic //
-void playLED(int count){
-  if (count == -1){
-    analogWrite(red, 0);
-    analogWrite(green, 0);
-    analogWrite(blue, 0);
-  }else{
-    switch (count%2){
-      case 0:
-        analogWrite(red, 200);
-        analogWrite(green, 0);
-        analogWrite(blue, 0);
-      case 1:
-        analogWrite(red, 0);
-        analogWrite(green, 200);
-        analogWrite(blue, 0);
-      case 2:
-        analogWrite(red, 0);
-        analogWrite(green, 0);
-        analogWrite(blue, 200);
-    }
-  }
-}
+
 
 // MIDI MUSIC PLAYING //
 
